@@ -1,28 +1,58 @@
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const day = new Date();
+const today = new Date(day.setDate(day.getDate()));
+let month = today.getMonth() + 1;
+if(month < 10) {
+    month = `0${month}`
+}
+let date = today.getDate();
+if(date < 10) {
+    date = `0${date}`
+}
+const todayValue = `${today.getFullYear()}-${month}-${date}`;
+const STORAGE_KEY = todayValue;
 
 function Counter() {
-    const [today, setToday] = useState();
-    const [text, setText] = useState();
+    const [text, setText] = useState("");
+    const [isEmptyStorage, setIsEmptyStorage] = useState(true);
     const [header, setHeader] = useState("noGoal");
     const [goal, setGoal] = useState("");
     const [now, setNow] = useState(0);
-    function handleToday() {
-        const day = new Date();
-        const today = new Date(day.setDate(day.getDate()));
-        let month = today.getMonth() + 1;
-        if(month < 10) {
-            month = `0${month}`
-        }
-        let date = today.getDate();
-        if(date < 10) {
-            date = `0${date}`
-        }
-        const todayValue = `${today.getFullYear()}-${month}-${date}`;
-        setToday(todayValue);
-    }
     function onChangeText(payload) {
         setText(payload);
+    }
+    async function storeData(value) {
+        try {
+            await AsyncStorage.setItem(STORAGE_KEY, value)
+        } catch (e) {
+            // saving error
+            console.log(e);
+        }
+    }
+    async function getData() {
+        const value = await AsyncStorage.getItem(STORAGE_KEY)
+        if(value === null) {
+            setIsEmptyStorage(true);
+        } else {
+            setIsEmptyStorage(false);
+            setText(value);
+        }
+    }
+    async function addData() {
+        if(text === '') {
+            return;
+        } else {
+            await storeData(text);
+            setIsEmptyStorage(false);
+        }
+    }
+    async function delData() {
+        await AsyncStorage.removeItem(STORAGE_KEY)
+        setIsEmptyStorage(true);
+        setText('');
     }
     function handleHeaderNoGoal() {
       if(header === 'goal') {
@@ -66,13 +96,19 @@ function Counter() {
       }
     }
     useEffect(() => {
-        handleToday();
-    }, []);
+        getData();
+    }, [text]);
     return (
         <View style={styles.container}>
             <View style={styles.info}>
-                <Text style={styles.infoDay}>{today}</Text>
-                <TextInput style={styles.infoText} returnKeyType='done' onChangeText={onChangeText} value={text} placeholder="오늘 말할 목표를 적어주세요" />
+                <Text style={styles.infoDay}>{todayValue}</Text>
+                {isEmptyStorage? 
+                    <TextInput style={styles.infoText} onSubmitEditing={addData} onChangeText={onChangeText} returnKeyType='done' value={text} placeholder={"오늘 말할 목표를 적어주세요"} />
+                    :
+                    <Pressable onPress={delData}>
+                        <Text style={styles.infoText}>{text}</Text>
+                    </Pressable>
+                }
             </View>
             <View style={styles.header}>
             <Pressable onPress={handleHeaderNoGoal}>
