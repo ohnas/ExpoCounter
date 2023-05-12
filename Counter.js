@@ -18,6 +18,7 @@ const STORAGE_KEY = todayValue;
 function Counter() {
     const [text, setText] = useState("");
     const [isEmptyStorage, setIsEmptyStorage] = useState(true);
+    const [isInputMode, setIsInputMode] = useState(true);
     const [header, setHeader] = useState("noGoal");
     const [goal, setGoal] = useState("");
     const [now, setNow] = useState(0);
@@ -26,7 +27,8 @@ function Counter() {
     }
     async function storeData(value) {
         try {
-            await AsyncStorage.setItem(STORAGE_KEY, value)
+            const jsonValue = JSON.stringify(value)
+            await AsyncStorage.setItem(STORAGE_KEY, jsonValue)
         } catch (e) {
             // saving error
             console.log(e);
@@ -34,25 +36,51 @@ function Counter() {
     }
     async function getData() {
         const value = await AsyncStorage.getItem(STORAGE_KEY)
-        if(value === null) {
+        const data = JSON.parse(value)
+        if(data === null) {
             setIsEmptyStorage(true);
         } else {
             setIsEmptyStorage(false);
-            setText(value);
+            setText(data.text);
+            setGoal(data.goal);
         }
     }
+    async function mergeData(value) {
+      await AsyncStorage.mergeItem(STORAGE_KEY, JSON.stringify(value))
+    }
     async function addData() {
+      const value = await AsyncStorage.getItem(STORAGE_KEY)
+      if(value === null) {
         if(text === '') {
             return;
         } else {
-            await storeData(text);
+            const data = {
+              "text" : text,
+              "goal" : '',
+            }
+            await storeData(data);
             setIsEmptyStorage(false);
         }
+      } else {
+        const data = {
+          "text" : text,
+          "goal" : goal,
+        }
+        await mergeData(data);
+        setIsEmptyStorage(false);
+        setIsInputMode(false);
+      }
     }
     async function delData() {
         await AsyncStorage.removeItem(STORAGE_KEY)
         setIsEmptyStorage(true);
+        setIsInputMode(true);
         setText('');
+        setGoal('');
+    }
+    function handleInputMode() {
+      setIsInputMode(true);
+      setGoal('');
     }
     function handleHeaderNoGoal() {
       if(header === 'goal') {
@@ -65,17 +93,23 @@ function Counter() {
       }
     }
     function handleGoal(value) {
-      const numericValue = Number(value);
-      const maxNumber = 100;
-      if (numericValue > maxNumber) {
+      if(text === '') {
         Alert.alert(
-          "알림" , "목표는 100 까지 입니다"
+          "알림" , "목표 문장을 먼저 작성해주세요"
         );
-        setGoal("");
-        return;
+      } else {
+        const numericValue = Number(value);
+        const maxNumber = 100;
+        if (numericValue > maxNumber) {
+          Alert.alert(
+            "알림" , "목표는 100 까지 입니다"
+          );
+          setGoal("");
+          return;
+        }
+        const stringValue = String(numericValue);
+        setGoal(stringValue);
       }
-      const stringValue = String(numericValue);
-      setGoal(stringValue);
     }
     function handleGoalPlusPress() {
       setNow((previous) => previous + 1);
@@ -95,6 +129,13 @@ function Counter() {
         return;
       }
     }
+    async function multiGetData() {
+      const values = await AsyncStorage.multiGet(['2023-05-11', '2023-05-12'])
+      console.log(values);
+    }
+    useEffect(() => {
+      multiGetData();
+    }, []);
     useEffect(() => {
         getData();
     }, [text]);
@@ -103,11 +144,11 @@ function Counter() {
             <View style={styles.info}>
                 <Text style={styles.infoDay}>{todayValue}</Text>
                 {isEmptyStorage? 
-                    <TextInput style={styles.infoText} onSubmitEditing={addData} onChangeText={onChangeText} returnKeyType='done' value={text} placeholder={"오늘 말할 목표를 적어주세요"} />
-                    :
-                    <Pressable onPress={delData}>
-                        <Text style={styles.infoText}>{text}</Text>
-                    </Pressable>
+                  <TextInput style={styles.infoText} onSubmitEditing={addData} onChangeText={onChangeText} returnKeyType='done' value={text} placeholder={"오늘 말할 목표를 적어주세요"} />
+                  :
+                  <Pressable onPress={delData}>
+                      <Text style={styles.infoText}>{text}</Text>
+                  </Pressable>
                 }
             </View>
             <View style={styles.header}>
@@ -137,7 +178,13 @@ function Counter() {
                 <View style={styles.counter}>
                 <Text style={styles.counterText}>{now}</Text>
                 <Text style={styles.goalText}>/</Text>
-                <TextInput style={styles.goalText} inputMode='numeric' returnKeyType='done' onChangeText={handleGoal} value={goal} placeholder='목표' />
+                {isInputMode ? 
+                  <TextInput style={styles.goalText} onSubmitEditing={addData} inputMode='numeric' returnKeyType='done' onChangeText={handleGoal} value={goal} placeholder='목표' />
+                  :
+                  <Pressable onPress={handleInputMode}>
+                    <Text style={styles.goalText}>{goal}</Text>
+                  </Pressable>
+                }
                 </View>
                 <View>
                 <TouchableOpacity style={styles.plus} onPress={handleGoalPlusPress}>
