@@ -41,6 +41,7 @@ function Counter() {
             setIsEmptyStorage(true);
         } else {
             setIsEmptyStorage(false);
+            setIsInputMode(false);
             setText(data.text);
             setGoal(data.goal);
         }
@@ -79,8 +80,8 @@ function Counter() {
         setGoal('');
     }
     function handleInputMode() {
-      setIsInputMode(true);
       setGoal('');
+      setIsInputMode(true);
     }
     function handleHeaderNoGoal() {
       if(header === 'goal') {
