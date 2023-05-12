@@ -78,6 +78,7 @@ function Counter() {
         await AsyncStorage.removeItem(STORAGE_KEY)
         setIsEmptyStorage(true);
         setIsInputMode(true);
+        setIsSuccess(false);
         setText('');
         setGoal('');
         setGoalNow(0);
@@ -223,7 +224,7 @@ function Counter() {
               </>
               :
               isSuccess ?
-                <View>
+                <View style={styles.success}>
                   <Text>Today is success</Text>
                 </View>
                 :
@@ -316,6 +317,13 @@ const styles = StyleSheet.create({
       fontSize: 50,
       textAlign: 'center',
     },
+    success: {
+      width: 350,
+      height: 525,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }
 });
 
 export default Counter;
