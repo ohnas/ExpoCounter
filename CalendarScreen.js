@@ -16,18 +16,13 @@ const todayValue = `${today.getFullYear()}-${month}-${date}`;
 const STORAGE_KEY = todayValue;
 
 function CalendarScreen() {
-    // async function getData() {
-    //     const value = await AsyncStorage.getItem(STORAGE_KEY)
-    //     if(value === null) {
-    //         setIsEmptyStorage(true);
-    //     } else {
-    //         setIsEmptyStorage(false);
-    //         setText(value);
-    //     }
-    // }
+    function handleMonthChange(value) {
+        console.log(value);
+    }
+    // const dayList = ["2023-05-11", "2023-05-12"]
     return (
         <View style={styles.container}>
-            <Calendar markedDates={{ [todayValue] : {marked: true, dotColor: 'red'}}} />
+            <Calendar markedDates={{ ["2023-05-11"] : {marked: true, dotColor: 'green'}}} onMonthChange={handleMonthChange} />
         </View>
     );
 }
