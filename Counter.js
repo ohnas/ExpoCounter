@@ -21,7 +21,9 @@ function Counter() {
     const [isInputMode, setIsInputMode] = useState(true);
     const [header, setHeader] = useState("noGoal");
     const [goal, setGoal] = useState("");
-    const [now, setNow] = useState(0);
+    const [goalNow, setGoalNow] = useState(0);
+    const [noGoalNow, setNoGoalNow] = useState(0);
+    const [isSuccess, setIsSuccess] = useState(false);
     function onChangeText(payload) {
         setText(payload);
     }
@@ -78,6 +80,7 @@ function Counter() {
         setIsInputMode(true);
         setText('');
         setGoal('');
+        setGoalNow(0);
     }
     function handleInputMode() {
       setGoal('');
@@ -112,21 +115,65 @@ function Counter() {
         setGoal(stringValue);
       }
     }
-    function handleGoalPlusPress() {
-      setNow((previous) => previous + 1);
-      if(now === Number(goal)) {
-        Alert.alert("알림", "🎉 축하합니다");
-        setNow(0);
-        return;
+    async function handleGoalPlusPress() {
+      if(goal === '') {
+        Alert.alert(
+          "알림" , "목표를 먼저 설정해주세요"
+        );
+      } else {
+        const data = {
+          "text" : text,
+          "goal" : goal,
+          "goalNow" : goalNow,
+        }
+        await mergeData(data);
+        setGoalNow((previous) => previous + 1);
+        if(goalNow === Number(goal)) {
+          const data = {
+            "text" : text,
+            "goal" : goal,
+            "goalNow" : goalNow,
+            "success" : true,
+          }
+          await mergeData(data);
+          Alert.alert("알림", "🎉 축하합니다");
+          setIsSuccess(true);
+        }
+      }
+    }
+    async function handleGoalMinusPress() {
+      if(goal === '') {
+        Alert.alert(
+          "알림" , "목표를 먼저 설정해주세요"
+        );
+      } else {
+        if(goalNow <= 0) {
+          setGoalNow(0);
+          const data = {
+            "text" : text,
+            "goal" : goal,
+            "goalNow" : goalNow,
+          }
+          await mergeData(data);
+          return;
+        } else {
+          const data = {
+            "text" : text,
+            "goal" : goal,
+            "goalNow" : goalNow,
+          }
+          await mergeData(data);
+          setGoalNow((previous) => previous - 1);
+        }
       }
     }
     function handleNoGoalPlusPress() {
-      setNow((previous) => previous + 1);
+      setNoGoalNow((previous) => previous + 1);
     }
-    function handleMinusPress() {
-      setNow((previous) => previous - 1);
-      if(now <= 0) {
-        setNow(0);
+    function handleNoGoalMinusPress() {
+      setNoGoalNow((previous) => previous - 1);
+      if(noGoalNow <= 0) {
+        setNoGoalNow(0);
         return;
       }
     }
@@ -161,41 +208,46 @@ function Counter() {
             </Pressable>
             </View>
             {header === "noGoal" ? 
-            <>
-                <View style={styles.counter}>
-                <Text style={styles.counterText}>{now}</Text>
-                </View>
+              <>
+                  <View style={styles.counter}>
+                    <Text style={styles.counterText}>{noGoalNow}</Text>
+                  </View>
+                  <View>
+                  <TouchableOpacity style={styles.plus} onPress={handleNoGoalPlusPress}>
+                      <Text style={styles.plusText}>+</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.minus} onPress={handleNoGoalMinusPress}>
+                      <Text style={styles.minusText}>-</Text>
+                  </TouchableOpacity>
+                  </View>
+              </>
+              :
+              isSuccess ?
                 <View>
-                <TouchableOpacity style={styles.plus} onPress={handleNoGoalPlusPress}>
-                    <Text style={styles.plusText}>+</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.minus} onPress={handleMinusPress}>
-                    <Text style={styles.minusText}>-</Text>
-                </TouchableOpacity>
+                  <Text>Today is success</Text>
                 </View>
-            </>
-            :
-            <>
-                <View style={styles.counter}>
-                <Text style={styles.counterText}>{now}</Text>
-                <Text style={styles.goalText}>/</Text>
-                {isInputMode ? 
-                  <TextInput style={styles.goalText} onSubmitEditing={addData} inputMode='numeric' returnKeyType='done' onChangeText={handleGoal} value={goal} placeholder='목표' />
-                  :
-                  <Pressable onPress={handleInputMode}>
-                    <Text style={styles.goalText}>{goal}</Text>
-                  </Pressable>
-                }
-                </View>
-                <View>
-                <TouchableOpacity style={styles.plus} onPress={handleGoalPlusPress}>
-                    <Text style={styles.plusText}>+</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.minus} onPress={handleMinusPress}>
-                    <Text style={styles.minusText}>-</Text>
-                </TouchableOpacity>
-                </View>
-            </>
+                :
+                <>
+                    <View style={styles.counter}>
+                      <Text style={styles.counterText}>{goalNow}</Text>
+                      <Text style={styles.goalText}>/</Text>
+                      {isInputMode ? 
+                        <TextInput style={styles.goalText} onSubmitEditing={addData} inputMode='numeric' returnKeyType='done' onChangeText={handleGoal} value={goal} placeholder='목표' />
+                        :
+                        <Pressable onPress={handleInputMode}>
+                          <Text style={styles.goalText}>{goal}</Text>
+                        </Pressable>
+                      }
+                    </View>
+                    <View>
+                    <TouchableOpacity style={styles.plus} onPress={handleGoalPlusPress}>
+                        <Text style={styles.plusText}>+</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.minus} onPress={handleGoalMinusPress}>
+                        <Text style={styles.minusText}>-</Text>
+                    </TouchableOpacity>
+                    </View>
+                </>
             }
         </View>
     );
