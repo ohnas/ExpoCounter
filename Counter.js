@@ -178,13 +178,6 @@ function Counter() {
         return;
       }
     }
-    // async function multiGetData() {
-    //   const values = await AsyncStorage.multiGet(['2023-05-11', '2023-05-12'])
-    //   console.log(values);
-    // }
-    // useEffect(() => {
-    //   multiGetData();
-    // }, []);
     useEffect(() => {
         getData();
     }, [text]);
