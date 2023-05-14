@@ -1,11 +1,25 @@
-import { Text, View } from 'react-native';
+import { useState } from 'react';
+import { Text, View, StyleSheet, Switch } from 'react-native';
 
 function Setting() {
+    const [isEnabled, setIsEnabled] = useState(false);
     return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>Settings!</Text>
+        <View style={styles.container}>
+            <View>
+                <Text>진동 활성화</Text>
+                <Switch />
+            </View>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#fff',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+})
 
 export default Setting;

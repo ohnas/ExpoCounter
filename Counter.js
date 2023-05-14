@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View, Vibration } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const day = new Date();
@@ -169,6 +169,7 @@ function Counter() {
       }
     }
     function handleNoGoalPlusPress() {
+      Vibration.vibrate();
       setNoGoalNow((previous) => previous + 1);
     }
     function handleNoGoalMinusPress() {
