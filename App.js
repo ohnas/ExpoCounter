@@ -12,8 +12,8 @@ export default function App() {
   return (
     <NavigationContainer>
       <Tab.Navigator screenOptions={{ headerShown: false }}>
-        <Tab.Screen name="List" component={SayList}  />
-        <Tab.Screen name="Counter" component={Counter}  />
+        <Tab.Screen name="List" component={SayList} />
+        <Tab.Screen name="Counter" component={Counter} />
         <Tab.Screen name="Calendar" component={CalendarScreen} />
         <Tab.Screen name="Settings" component={Setting} />
       </Tab.Navigator>

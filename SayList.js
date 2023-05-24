@@ -12,13 +12,12 @@ let date = today.getDate();
 if(date < 10) {
     date = `0${date}`
 }
-let todayValue = `${today.getFullYear()}-${month}-${date}`;
+const todayValue = `${today.getFullYear()}-${month}-${date}`;
 let STRING_STORAGE_KEY = `${todayValue}-00`
 STRING_STORAGE_KEY = STRING_STORAGE_KEY.replace(/-/g,'');
 
 function SayList() {
     const [text, setText] = useState("");
-    const [isSubmit, setIsSubmit] = useState(true);
     const [numberStorageKey, setNumberStarageKey] = useState([]);
     const [storageData, setStorageData] = useState([]);
     const [isEmptyStorage, setIsEmptyStorage] = useState(true);
@@ -27,7 +26,6 @@ function SayList() {
     }
     async function getTodayKeys() {
         let keys = await AsyncStorage.getAllKeys()
-        console.log(keys);
         let todayKeys = [];
         let todayString = todayValue.replace(/-/g,'');
         keys.forEach((key) => {
@@ -44,12 +42,12 @@ function SayList() {
             )
             convertNumKeys.sort();
             setNumberStarageKey(convertNumKeys);
-            await getMultiData();
+            await getMultiData(convertNumKeys);
         }
     }
-    async function getMultiData() {
+    async function getMultiData(convertNumKeys) {
         let storageDataArry = [];
-        for(let key of numberStorageKey) {
+        for(let key of convertNumKeys) {
             let data = await AsyncStorage.getItem(String(key))
             let jsonData = JSON.parse(data)
             storageDataArry.push({
@@ -61,19 +59,19 @@ function SayList() {
         setIsEmptyStorage(false);
     }
     async function storeData(data) {
-        setIsSubmit(true);
         if(numberStorageKey.length === 0) {
             const jsonData = JSON.stringify(data)
             await AsyncStorage.setItem(STRING_STORAGE_KEY, jsonData)
             setNumberStarageKey([...numberStorageKey, Number(STRING_STORAGE_KEY)])
+            setStorageData([...storageData, {"key" : Number(STRING_STORAGE_KEY), "data" : data}])
         } else {
             let max = Math.max(...numberStorageKey);
             let stringStorageKey = String(max + 1);
             const jsonData = JSON.stringify(data)
             await AsyncStorage.setItem(stringStorageKey, jsonData)
             setNumberStarageKey([...numberStorageKey, Number(stringStorageKey)])
+            setStorageData([...storageData, {"key" : Number(stringStorageKey), "data" : data}])
         }
-        setIsSubmit(false);
     }
     async function addData() {
         if(text === '') {
@@ -92,11 +90,6 @@ function SayList() {
     useEffect(() => {
         getTodayKeys();
     }, []);
-    useEffect(() => {
-        if(isSubmit === false) {
-            getMultiData();
-        }
-    }, [isSubmit]);
     return (
         <View style={styles.container}>
             <View style={styles.info}>
