@@ -64,6 +64,7 @@ function SayList() {
             await AsyncStorage.setItem(STRING_STORAGE_KEY, jsonData)
             setNumberStarageKey([...numberStorageKey, Number(STRING_STORAGE_KEY)])
             setStorageData([...storageData, {"key" : Number(STRING_STORAGE_KEY), "data" : data}])
+            setIsEmptyStorage(false);
         } else {
             let max = Math.max(...numberStorageKey);
             let stringStorageKey = String(max + 1);
@@ -71,6 +72,7 @@ function SayList() {
             await AsyncStorage.setItem(stringStorageKey, jsonData)
             setNumberStarageKey([...numberStorageKey, Number(stringStorageKey)])
             setStorageData([...storageData, {"key" : Number(stringStorageKey), "data" : data}])
+            setIsEmptyStorage(false);
         }
     }
     async function addData() {

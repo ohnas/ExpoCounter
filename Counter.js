@@ -20,14 +20,10 @@ STRING_STORAGE_KEY = STRING_STORAGE_KEY.replace(/-/g,'');
 function Counter() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
-  const [items, setItems] = useState([
-    {label: 'Apple', value: 'apple'},
-    {label: 'Banana', value: 'banana'}
-  ]);
+  const [items, setItems] = useState([]);
   const [text, setText] = useState("");
   const [isEmptyStorage, setIsEmptyStorage] = useState(true);
   const [numberStorageKey, setNumberStarageKey] = useState([]);
-  const [storageData, setStorageData] = useState([]);
   const [isInputMode, setIsInputMode] = useState(true);
   const [header, setHeader] = useState("noGoal");
   const [goal, setGoal] = useState("");
@@ -37,15 +33,6 @@ function Counter() {
   function onChangeText(payload) {
       setText(payload);
   }
-  // async function storeData(value) {
-  //     try {
-  //         const jsonValue = JSON.stringify(value)
-  //         await AsyncStorage.setItem(STORAGE_KEY, jsonValue)
-  //     } catch (e) {
-  //         // saving error
-  //         console.log(e);
-  //     }
-  // }
   async function getTodayKeys() {
     let keys = await AsyncStorage.getAllKeys()
     let todayKeys = [];
@@ -64,57 +51,33 @@ function Counter() {
         )
         convertNumKeys.sort();
         setNumberStarageKey(convertNumKeys);
-        await getMultiData();
+        await getMultiData(convertNumKeys);
     }
   }
-async function getMultiData() {
-    let storageDataArry = [];
-    for(let key of numberStorageKey) {
+  async function getMultiData(convertNumKeys) {
+    let itemsArray = [];
+    for(let key of convertNumKeys) {
         let data = await AsyncStorage.getItem(String(key))
         let jsonData = JSON.parse(data)
-        storageDataArry.push({
-            "key" : key,
-            "data" : jsonData,
+        itemsArray.push({
+          label: key , value: jsonData.text
         });
     }
-    setStorageData(storageDataArry);
+    setItems(itemsArray);
     setIsEmptyStorage(false);
-}
+  }
   async function mergeData(value) {
     await AsyncStorage.mergeItem(STORAGE_KEY, JSON.stringify(value))
   }
-  async function addData() {
-    const value = await AsyncStorage.getItem(STORAGE_KEY)
-    if(value === null) {
-      if(text === '') {
-          return;
-      } else {
-          const data = {
-            "text" : text,
-            "goal" : '',
-          }
-          await storeData(data);
-          setIsEmptyStorage(false);
-      }
-    } else {
-      const data = {
-        "text" : text,
-        "goal" : goal,
-      }
-      await mergeData(data);
-      setIsEmptyStorage(false);
-      setIsInputMode(false);
-    }
-  }
-  async function delData() {
-      await AsyncStorage.removeItem(STORAGE_KEY)
-      setIsEmptyStorage(true);
-      setIsInputMode(true);
-      setIsSuccess(false);
-      setText('');
-      setGoal('');
-      setGoalNow(0);
-  }
+  // async function delData() {
+  //     await AsyncStorage.removeItem(STORAGE_KEY)
+  //     setIsEmptyStorage(true);
+  //     setIsInputMode(true);
+  //     setIsSuccess(false);
+  //     setText('');
+  //     setGoal('');
+  //     setGoalNow(0);
+  // }
   function handleInputMode() {
     setGoal('');
     setIsInputMode(true);
