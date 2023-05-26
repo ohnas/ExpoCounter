@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { Text, View, StyleSheet, TextInput, ScrollView, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const day = new Date();
@@ -18,11 +18,15 @@ STRING_STORAGE_KEY = STRING_STORAGE_KEY.replace(/-/g,'');
 
 function SayList() {
     const [text, setText] = useState("");
+    const [goalNum, setGoalNum] = useState("");
     const [numberStorageKey, setNumberStarageKey] = useState([]);
     const [storageData, setStorageData] = useState([]);
     const [isEmptyStorage, setIsEmptyStorage] = useState(true);
-    function onChangeText(payload) {
-        setText(payload);
+    function handleChangeText(value) {
+        setText(value);
+    }
+    function handleChangeGoalNum(value) {
+        setGoalNum(value);
     }
     async function getTodayKeys() {
         let keys = await AsyncStorage.getAllKeys()
@@ -77,16 +81,25 @@ function SayList() {
     }
     async function addData() {
         if(text === '') {
+            Alert.alert(
+                "알림" , "오늘 말할 목표를 적어주세요"
+            );
+            return;
+        } else if(goalNum === '') {
+            Alert.alert(
+                "알림" , "목표 수를 적어주세요"
+            );
             return;
         } else {
             let data = {
                 "text" : text,
                 "currentNum" : 0,
-                "goalNum" : 0,
+                "goalNum" : Number(goalNum),
                 "success" : false,
             };
             await storeData(data);
             setText('');
+            setGoalNum('');
         }
     }
     useEffect(() => {
@@ -96,7 +109,9 @@ function SayList() {
         <View style={styles.container}>
             <View style={styles.info}>
                 <Text style={styles.infoDay}>{todayValue}</Text>
-                <TextInput style={styles.infoText} onSubmitEditing={addData} onChangeText={onChangeText} returnKeyType='done' value={text} placeholder={"오늘 말할 목표를 적어주세요"} />
+                <TextInput style={styles.infoText} onChangeText={handleChangeText} returnKeyType='done' value={text} placeholder={"오늘 말할 목표를 적어주세요"} />
+                <TextInput style={styles.infoText} onChangeText={handleChangeGoalNum} inputMode='numeric' returnKeyType='done' value={goalNum} placeholder={"목표 수를 적어주세요"} />
+                <Button title="등록" onPress={addData} />
             </View>
             <ScrollView showsVerticalScrollIndicator={true} style={styles.scroll}>
                 {isEmptyStorage ?
@@ -128,34 +143,34 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
-      },
-      info: {
+    },
+    info: {
         width: 350,
         marginTop: 50,
         marginBottom: 50,
         borderBottomWidth: 2,
         borderBottomColor: "gray",
         alignItems: 'center',
-      },
-      infoDay: {
+    },
+    infoDay: {
         marginBottom: 30,
-      },
-      infoText: {
+    },
+    infoText: {
         fontSize: 25,
         marginBottom: 10,
-      },
-      scroll: {
+    },
+    scroll: {
         width: 350,
-      },
-      scrollText: {
+    },
+    scrollText: {
         marginTop: 300,
         color: "gray",
-      },
-      dataView: {
+    },
+    dataView: {
         width: 350,
         alignItems: 'center',
-      },
-      dataViewInner: {
+    },
+    dataViewInner: {
         flexDirection: 'row',
         width: 350,
         borderWidth: 2,
@@ -164,14 +179,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-around',
         marginBottom: 10,
-      },
-      dataViewInnerText: {
+    },
+    dataViewInnerText: {
         fontSize: 30,
         paddingVertical: 15,
-      },
-      dataViewInnerNumber: {
+    },
+    dataViewInnerNumber: {
         flexDirection: 'row',
-      }
+    }
 })
 
 export default SayList;

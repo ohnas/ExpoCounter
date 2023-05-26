@@ -17,21 +17,16 @@ let STRING_STORAGE_KEY = `${todayValue}-00`
 STRING_STORAGE_KEY = STRING_STORAGE_KEY.replace(/-/g,'');
 
 function Counter() {
-  const [text, setText] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [isEmptyStorage, setIsEmptyStorage] = useState(true);
-  const [numberStorageKey, setNumberStarageKey] = useState([]);
   const [sayItems, setSayItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [isInputMode, setIsInputMode] = useState(true);
   const [header, setHeader] = useState("noGoal");
+  const [noGoalNow, setNoGoalNow] = useState(0);
   const [goal, setGoal] = useState("");
   const [goalNow, setGoalNow] = useState(0);
-  const [noGoalNow, setNoGoalNow] = useState(0);
+  const [isInputMode, setIsInputMode] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
-  function onChangeText(payload) {
-      setText(payload);
-  }
   async function getTodayKeys() {
     let keys = await AsyncStorage.getAllKeys()
     let todayKeys = [];
@@ -49,7 +44,6 @@ function Counter() {
             convertNumKeys.push(Number(todayKey))
         )
         convertNumKeys.sort();
-        setNumberStarageKey(convertNumKeys);
         await getMultiData(convertNumKeys);
     }
   }
@@ -58,6 +52,7 @@ function Counter() {
     for(let key of convertNumKeys) {
         let data = await AsyncStorage.getItem(String(key))
         let jsonData = JSON.parse(data)
+        console.log(jsonData);
         itemsArray.push({
           "key" : key,
           "data" : jsonData,
@@ -66,8 +61,10 @@ function Counter() {
     setSayItems(itemsArray);
     setIsEmptyStorage(false);
   }
-  async function mergeData(value) {
-    await AsyncStorage.mergeItem(STORAGE_KEY, JSON.stringify(value))
+  async function mergeData() {
+    selectedItem.data.goalNum = Number(goal);
+    await AsyncStorage.mergeItem(String(selectedItem.key), JSON.stringify(selectedItem.data))
+    setIsInputMode(false);
   }
   // async function delData() {
   //     await AsyncStorage.removeItem(STORAGE_KEY)
@@ -78,24 +75,20 @@ function Counter() {
   //     setGoal('');
   //     setGoalNow(0);
   // }
-  function handleInputMode() {
-    setGoal('');
-    setIsInputMode(true);
-  }
-  function handleHeaderNoGoal() {
-    if(header === 'goal') {
-      setHeader('noGoal');
-    }
-  }
-  function handleHeaderGoal() {
-    if(header === 'noGoal') {
-      setHeader('goal');
-    }
-  }
+  // function handleHeaderNoGoal() {
+  //   if(header === 'goal') {
+  //     setHeader('noGoal');
+  //   }
+  // }
+  // function handleHeaderGoal() {
+  //   if(header === 'noGoal') {
+  //     setHeader('goal');
+  //   }
+  // }
   function handleGoal(value) {
-    if(text === '') {
+    if(selectedItem === null) {
       Alert.alert(
-        "알림" , "목표 문장을 먼저 작성해주세요"
+        "알림" , "목표 문장을 먼저 선택해주세요"
       );
     } else {
       const numericValue = Number(value);
@@ -163,17 +156,6 @@ function Counter() {
       }
     }
   }
-  function handleNoGoalPlusPress() {
-    Vibration.vibrate();
-    setNoGoalNow((previous) => previous + 1);
-  }
-  function handleNoGoalMinusPress() {
-    setNoGoalNow((previous) => previous - 1);
-    if(noGoalNow <= 0) {
-      setNoGoalNow(0);
-      return;
-    }
-  }
   useEffect(() => {
     getTodayKeys();
   }, []);
@@ -211,7 +193,10 @@ function Counter() {
                   </View>
                 </View>
               </Modal>
-              <Pressable onPress={() => setModalVisible(true)} style={styles.infoText}>
+              <Pressable onPress={() => {
+                  setGoal('');
+                  setModalVisible(true);
+                }} style={styles.infoText}>
                 <Text>문장 선택하기</Text>
               </Pressable>
             </View>
@@ -225,54 +210,64 @@ function Counter() {
           }
         </View>
         <View style={styles.header}>
-        <Pressable onPress={handleHeaderNoGoal}>
-            <Text style={{...styles.headerText, color: header === 'noGoal' ? "black" : "gray"}}>노 목표</Text>
-        </Pressable>
-        <Pressable onPress={handleHeaderGoal}>
-            <Text style={{...styles.headerText, color: header === 'goal' ? "black" : "gray"}}>목표</Text>
-        </Pressable>
+          <Pressable onPress={() => setHeader('noGoal')}>
+              <Text style={{...styles.headerText, color: header === 'noGoal' ? "black" : "gray"}}>노 목표</Text>
+          </Pressable>
+          <Pressable onPress={() => setHeader('goal')}>
+              <Text style={{...styles.headerText, color: header === 'goal' ? "black" : "gray"}}>목표</Text>
+          </Pressable>
         </View>
-        {header === "noGoal" ? 
+        {header === 'noGoal' ? 
           <>
-              <View style={styles.counter}>
-                <Text style={styles.counterText}>{noGoalNow}</Text>
-              </View>
-              <View>
-              <TouchableOpacity style={styles.plus} onPress={handleNoGoalPlusPress}>
+            <View style={styles.counter}>
+              <Text style={styles.counterText}>{noGoalNow}</Text>
+            </View>
+            <View>
+              <TouchableOpacity style={styles.plus} onPress={() => setNoGoalNow((previous) => previous + 1)}>
                   <Text style={styles.plusText}>+</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.minus} onPress={handleNoGoalMinusPress}>
+              <TouchableOpacity style={styles.minus} onPress={() => {
+                setNoGoalNow((previous) => previous - 1);
+                if(noGoalNow <= 0) {
+                  setNoGoalNow(0);
+                  return;
+                }}}>
                   <Text style={styles.minusText}>-</Text>
               </TouchableOpacity>
-              </View>
+            </View>
           </>
           :
-          isSuccess ?
-            <View style={styles.success}>
-              <Text>Today is success</Text>
+          <>
+            <View style={styles.counter}>
+              <Text style={styles.counterText}>{goalNow}</Text>
+              <Text style={styles.goalText}>/</Text>
+              {isInputMode ? 
+                <TextInput style={styles.goalText} onSubmitEditing={mergeData} inputMode='numeric' returnKeyType='done' onChangeText={handleGoal} value={goal} placeholder='목표' />
+                :
+                <Pressable onPress={() => setIsInputMode(true)}>
+                 <Text style={styles.goalText}>{selectedItem.data.goalNum}</Text>
+                </Pressable>
+              }
             </View>
-            :
-            <>
-                <View style={styles.counter}>
-                  <Text style={styles.counterText}>{goalNow}</Text>
-                  <Text style={styles.goalText}>/</Text>
-                  {isInputMode ? 
-                    <TextInput style={styles.goalText} onSubmitEditing={addData} inputMode='numeric' returnKeyType='done' onChangeText={handleGoal} value={goal} placeholder='목표' />
-                    :
-                    <Pressable onPress={handleInputMode}>
-                      <Text style={styles.goalText}>{goal}</Text>
-                    </Pressable>
-                  }
-                </View>
-                <View>
-                <TouchableOpacity style={styles.plus} onPress={handleGoalPlusPress}>
-                    <Text style={styles.plusText}>+</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.minus} onPress={handleGoalMinusPress}>
-                    <Text style={styles.minusText}>-</Text>
-                </TouchableOpacity>
-                </View>
-            </>
+            <View>
+            <TouchableOpacity style={styles.plus} onPress={async () => {
+                if(goal === '') {
+                  Alert.alert(
+                    "알림" , "목표를 먼저 설정해주세요"
+                  );
+                } else {
+                  setGoalNow((previous) => previous + 1);
+                  selectedItem.data.currentNum = goalNow;
+                  await AsyncStorage.mergeItem(String(selectedItem.key), JSON.stringify(selectedItem.data))
+                }
+              }}>
+                <Text style={styles.plusText}>+</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.minus} onPress={handleGoalMinusPress}>
+                <Text style={styles.minusText}>-</Text>
+            </TouchableOpacity>
+            </View>
+          </>
         }
       </View>
   );
