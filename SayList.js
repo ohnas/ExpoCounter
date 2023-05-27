@@ -1,73 +1,28 @@
-import { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, TextInput, ScrollView, Button, Alert } from 'react-native';
+import { useState } from 'react';
+import { Text, View, StyleSheet, TextInput, ScrollView, Button, Alert, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const day = new Date();
-const today = new Date(day.setDate(day.getDate()));
-let month = today.getMonth() + 1;
-if(month < 10) {
-    month = `0${month}`
-}
-let date = today.getDate();
-if(date < 10) {
-    date = `0${date}`
-}
-const todayValue = `${today.getFullYear()}-${month}-${date}`;
-let STRING_STORAGE_KEY = `${todayValue}-00`
-STRING_STORAGE_KEY = STRING_STORAGE_KEY.replace(/-/g,'');
-
-function SayList() {
+function SayList({ todayValue, STRING_STORAGE_KEY, numberStorageKey, setNumberStarageKey, storageData, setStorageData, isEmptyStorage, setIsEmptyStorage }) {
     const [text, setText] = useState("");
     const [goalNum, setGoalNum] = useState("");
-    const [numberStorageKey, setNumberStarageKey] = useState([]);
-    const [storageData, setStorageData] = useState([]);
-    const [isEmptyStorage, setIsEmptyStorage] = useState(true);
     function handleChangeText(value) {
         setText(value);
     }
     function handleChangeGoalNum(value) {
         setGoalNum(value);
     }
-    async function getTodayKeys() {
-        let keys = await AsyncStorage.getAllKeys()
-        let todayKeys = [];
-        let todayString = todayValue.replace(/-/g,'');
-        keys.forEach((key) => {
-            if(key.includes(todayString)) {
-                todayKeys.push(key)
-            }
-        })
-        if(todayKeys.length === 0) {
-            setIsEmptyStorage(true);
-        } else {
-            let convertNumKeys = [];
-            todayKeys.forEach((todayKey) => 
-                convertNumKeys.push(Number(todayKey))
-            )
-            convertNumKeys.sort();
-            setNumberStarageKey(convertNumKeys);
-            await getMultiData(convertNumKeys);
-        }
-    }
-    async function getMultiData(convertNumKeys) {
-        let storageDataArry = [];
-        for(let key of convertNumKeys) {
-            let data = await AsyncStorage.getItem(String(key))
-            let jsonData = JSON.parse(data)
-            storageDataArry.push({
-                "key" : key,
-                "data" : jsonData,
-            });
-        }
-        setStorageData(storageDataArry);
-        setIsEmptyStorage(false);
-    }
     async function storeData(data) {
         if(numberStorageKey.length === 0) {
             const jsonData = JSON.stringify(data)
             await AsyncStorage.setItem(STRING_STORAGE_KEY, jsonData)
             setNumberStarageKey([...numberStorageKey, Number(STRING_STORAGE_KEY)])
-            setStorageData([...storageData, {"key" : Number(STRING_STORAGE_KEY), "data" : data}])
+            setStorageData([...storageData, {
+                "key" : Number(STRING_STORAGE_KEY), 
+                "text" : data.text,
+                "currentNum" : data.currentNum,
+                "goalNum" : data.goalNum,
+                "success" : data.success,
+            }])
             setIsEmptyStorage(false);
         } else {
             let max = Math.max(...numberStorageKey);
@@ -75,7 +30,13 @@ function SayList() {
             const jsonData = JSON.stringify(data)
             await AsyncStorage.setItem(stringStorageKey, jsonData)
             setNumberStarageKey([...numberStorageKey, Number(stringStorageKey)])
-            setStorageData([...storageData, {"key" : Number(stringStorageKey), "data" : data}])
+            setStorageData([...storageData, {
+                "key" : Number(stringStorageKey), 
+                "text" : data.text,
+                "currentNum" : data.currentNum,
+                "goalNum" : data.goalNum,
+                "success" : data.success,
+            }])
             setIsEmptyStorage(false);
         }
     }
@@ -102,9 +63,6 @@ function SayList() {
             setGoalNum('');
         }
     }
-    useEffect(() => {
-        getTodayKeys();
-    }, []);
     return (
         <View style={styles.container}>
             <View style={styles.info}>
@@ -122,12 +80,18 @@ function SayList() {
                     <View style={styles.dataView}>
                         {storageData.map((d) =>
                             <View style={styles.dataViewInner} key={d.key}>
-                                <Text style={styles.dataViewInnerText}>{d.data.text}</Text>
+                                <Text style={styles.dataViewInnerText}>{d.text}</Text>
                                 <View style={styles.dataViewInnerNumber}>
-                                    <Text style={styles.dataViewInnerText}>{d.data.currentNum}</Text>
+                                    <Text style={styles.dataViewInnerText}>{d.currentNum}</Text>
                                     <Text style={styles.dataViewInnerText}>/</Text>
-                                    <Text style={styles.dataViewInnerText}>{d.data.goalNum}</Text>
+                                    <Text style={styles.dataViewInnerText}>{d.goalNum}</Text>
                                 </View>
+                                <Pressable onPress={async () => {
+                                    await AsyncStorage.removeItem(String(d.key));
+                                    setStorageData(storageData.filter((data) => data.key !== d.key));
+                                }}>
+                                    <Text>🗑</Text>
+                                </Pressable>
                             </View>
                         )}
                     </View>

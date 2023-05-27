@@ -1,164 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View, Vibration, Modal } from 'react-native';
+import { useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, TouchableOpacity, View, Vibration, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const day = new Date();
-const today = new Date(day.setDate(day.getDate()));
-let month = today.getMonth() + 1;
-if(month < 10) {
-    month = `0${month}`
-}
-let date = today.getDate();
-if(date < 10) {
-    date = `0${date}`
-}
-const todayValue = `${today.getFullYear()}-${month}-${date}`;
-let STRING_STORAGE_KEY = `${todayValue}-00`
-STRING_STORAGE_KEY = STRING_STORAGE_KEY.replace(/-/g,'');
-
-function Counter() {
+function Counter({ storageData, setStorageData, isEmptyStorage }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [isEmptyStorage, setIsEmptyStorage] = useState(true);
-  const [sayItems, setSayItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [header, setHeader] = useState("noGoal");
   const [noGoalNow, setNoGoalNow] = useState(0);
-  const [goal, setGoal] = useState("");
-  const [goalNow, setGoalNow] = useState(0);
-  const [isInputMode, setIsInputMode] = useState(true);
-  const [isSuccess, setIsSuccess] = useState(false);
-  async function getTodayKeys() {
-    let keys = await AsyncStorage.getAllKeys()
-    let todayKeys = [];
-    let todayString = todayValue.replace(/-/g,'');
-    keys.forEach((key) => {
-        if(key.includes(todayString)) {
-            todayKeys.push(key)
-        }
-    })
-    if(todayKeys.length === 0) {
-        setIsEmptyStorage(true);
-    } else {
-        let convertNumKeys = [];
-        todayKeys.forEach((todayKey) => 
-            convertNumKeys.push(Number(todayKey))
-        )
-        convertNumKeys.sort();
-        await getMultiData(convertNumKeys);
-    }
-  }
-  async function getMultiData(convertNumKeys) {
-    let itemsArray = [];
-    for(let key of convertNumKeys) {
-        let data = await AsyncStorage.getItem(String(key))
-        let jsonData = JSON.parse(data)
-        console.log(jsonData);
-        itemsArray.push({
-          "key" : key,
-          "data" : jsonData,
-        });
-    }
-    setSayItems(itemsArray);
-    setIsEmptyStorage(false);
-  }
-  async function mergeData() {
-    selectedItem.data.goalNum = Number(goal);
-    await AsyncStorage.mergeItem(String(selectedItem.key), JSON.stringify(selectedItem.data))
-    setIsInputMode(false);
-  }
-  // async function delData() {
-  //     await AsyncStorage.removeItem(STORAGE_KEY)
-  //     setIsEmptyStorage(true);
-  //     setIsInputMode(true);
-  //     setIsSuccess(false);
-  //     setText('');
-  //     setGoal('');
-  //     setGoalNow(0);
-  // }
-  // function handleHeaderNoGoal() {
-  //   if(header === 'goal') {
-  //     setHeader('noGoal');
-  //   }
-  // }
-  // function handleHeaderGoal() {
-  //   if(header === 'noGoal') {
-  //     setHeader('goal');
-  //   }
-  // }
-  function handleGoal(value) {
-    if(selectedItem === null) {
-      Alert.alert(
-        "알림" , "목표 문장을 먼저 선택해주세요"
-      );
-    } else {
-      const numericValue = Number(value);
-      const maxNumber = 100;
-      if (numericValue > maxNumber) {
-        Alert.alert(
-          "알림" , "목표는 100 까지 입니다"
-        );
-        setGoal("");
-        return;
-      }
-      const stringValue = String(numericValue);
-      setGoal(stringValue);
-    }
-  }
-  async function handleGoalPlusPress() {
-    if(goal === '') {
-      Alert.alert(
-        "알림" , "목표를 먼저 설정해주세요"
-      );
-    } else {
-      const data = {
-        "text" : text,
-        "goal" : goal,
-        "goalNow" : goalNow,
-      }
-      await mergeData(data);
-      setGoalNow((previous) => previous + 1);
-      if(goalNow === Number(goal)) {
-        const data = {
-          "text" : text,
-          "goal" : goal,
-          "goalNow" : goalNow,
-          "success" : true,
-        }
-        await mergeData(data);
-        Alert.alert("알림", "🎉 축하합니다");
-        setIsSuccess(true);
-      }
-    }
-  }
-  async function handleGoalMinusPress() {
-    if(goal === '') {
-      Alert.alert(
-        "알림" , "목표를 먼저 설정해주세요"
-      );
-    } else {
-      if(goalNow <= 0) {
-        setGoalNow(0);
-        const data = {
-          "text" : text,
-          "goal" : goal,
-          "goalNow" : goalNow,
-        }
-        await mergeData(data);
-        return;
-      } else {
-        const data = {
-          "text" : text,
-          "goal" : goal,
-          "goalNow" : goalNow,
-        }
-        await mergeData(data);
-        setGoalNow((previous) => previous - 1);
-      }
-    }
-  }
-  useEffect(() => {
-    getTodayKeys();
-  }, []);
+
   return (
       <View style={styles.container}>
         <View style={styles.info}>
@@ -173,17 +22,17 @@ function Counter() {
               }}>
                 <View style={styles.centeredView}>
                   <View style={styles.modalView}>
-                    {sayItems.map((item) =>
+                    {storageData.map((d) =>
                       <Pressable style={styles.modalViewInner} onPress={() => {
-                        setSelectedItem(item);
+                        setSelectedItem(d);
                         setModalVisible(!modalVisible);
                         }} 
-                        key={item.key}>
-                          <Text>{item.data.text}</Text>
+                        key={d.key}>
+                          <Text>{d.text}</Text>
                           <View style={styles.modalViewInnerNumber}>
-                              <Text>{item.data.currentNum}</Text>
+                              <Text>{d.currentNum}</Text>
                               <Text>/</Text>
-                              <Text>{item.data.goalNum}</Text>
+                              <Text>{d.goalNum}</Text>
                           </View>
                       </Pressable>
                     )}
@@ -193,10 +42,7 @@ function Counter() {
                   </View>
                 </View>
               </Modal>
-              <Pressable onPress={() => {
-                  setGoal('');
-                  setModalVisible(true);
-                }} style={styles.infoText}>
+              <Pressable onPress={() => setModalVisible(true)} style={styles.infoText}>
                 <Text>문장 선택하기</Text>
               </Pressable>
             </View>
@@ -205,7 +51,7 @@ function Counter() {
             null
             :
             <View style={styles.infoSelected}>
-              <Text style={styles.infoSelectedText}>{selectedItem.data.text}</Text>
+              <Text style={styles.infoSelectedText}>{selectedItem.text}</Text>
             </View>
           }
         </View>
@@ -239,31 +85,89 @@ function Counter() {
           :
           <>
             <View style={styles.counter}>
-              <Text style={styles.counterText}>{goalNow}</Text>
+              <Text style={styles.counterText}>{selectedItem.currentNum}</Text>
               <Text style={styles.goalText}>/</Text>
-              {isInputMode ? 
-                <TextInput style={styles.goalText} onSubmitEditing={mergeData} inputMode='numeric' returnKeyType='done' onChangeText={handleGoal} value={goal} placeholder='목표' />
-                :
-                <Pressable onPress={() => setIsInputMode(true)}>
-                 <Text style={styles.goalText}>{selectedItem.data.goalNum}</Text>
-                </Pressable>
-              }
+              <Text style={styles.goalText}>{selectedItem.goalNum}</Text>
             </View>
             <View>
             <TouchableOpacity style={styles.plus} onPress={async () => {
-                if(goal === '') {
+                if(selectedItem.currentNum === selectedItem.goalNum) {
+                  setSelectedItem({
+                    ...selectedItem,
+                    success : true
+                  })
                   Alert.alert(
-                    "알림" , "목표를 먼저 설정해주세요"
+                    "알림" , "🎉 달성하였습니다"
+                  );
+                  let data = {
+                    "text" : selectedItem.text,
+                    "currentNum" : selectedItem.currentNum,
+                    "goalNum" : selectedItem.goalNum,
+                    "success" : selectedItem.success,
+                  };
+                  let jsonData = JSON.stringify(data)
+                  await AsyncStorage.mergeItem(String(selectedItem.key), jsonData)
+                  setStorageData([
+                    storageData.map((d) => {
+                      d.key === selectedItem.key ? 
+                        {...d, success : selectedItem.success} 
+                        : 
+                        d
+                    })]
+                  );
+                } else if(selectedItem.currentNum > selectedItem.goalNum) {
+                  Alert.alert(
+                    "알림" , "해당 문장은 달성하였습니다"
                   );
                 } else {
-                  setGoalNow((previous) => previous + 1);
-                  selectedItem.data.currentNum = goalNow;
-                  await AsyncStorage.mergeItem(String(selectedItem.key), JSON.stringify(selectedItem.data))
+                  setSelectedItem({
+                    ...selectedItem,
+                    currentNum : selectedItem.currentNum + 1
+                  })
+                  // console.log(selectedItem);
+                  // let data = {
+                  //   "text" : selectedItem.text,
+                  //   "currentNum" : selectedItem.currentNum,
+                  //   "goalNum" : selectedItem.goalNum,
+                  //   "success" : selectedItem.success,
+                  // };
+                  // console.log(data);
+                  // let jsonData = JSON.stringify(data)
+                  // await AsyncStorage.mergeItem(String(selectedItem.key), jsonData)
+                  // let getData = await AsyncStorage.getItem(String(selectedItem.key))
+                  // let getJsonData = JSON.parse(getData)
+                  // console.log(getJsonData)
+                  // handleStaorageData(data)
                 }
               }}>
                 <Text style={styles.plusText}>+</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.minus} onPress={handleGoalMinusPress}>
+            <TouchableOpacity style={styles.minus} onPress={async() =>{
+                if(selectedItem.currentNum === 0) {
+                  return;
+                } else {
+                  setSelectedItem({
+                    ...selectedItem,
+                    currentNum : selectedItem.currentNum - 1
+                  })
+                  let data = {
+                    "text" : selectedItem.text,
+                    "currentNum" : selectedItem.currentNum,
+                    "goalNum" : selectedItem.goalNum,
+                    "success" : selectedItem.success,
+                  };
+                  let jsonData = JSON.stringify(data)
+                  await AsyncStorage.mergeItem(String(selectedItem.key), jsonData)
+                  setStorageData([
+                    storageData.map((d) => {
+                      d.key === selectedItem.key ? 
+                        {...d, currentNum : selectedItem.currentNum} 
+                        : 
+                        d
+                    })]
+                  );
+                }
+              }}>
                 <Text style={styles.minusText}>-</Text>
             </TouchableOpacity>
             </View>
