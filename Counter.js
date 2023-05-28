@@ -1,13 +1,65 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TouchableOpacity, View, Vibration, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function Counter({ storageData, setStorageData, isEmptyStorage }) {
+function Counter({ storageData, setStorageData, isEmptyStorage, selectedItem, setSelectedItem }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
   const [header, setHeader] = useState("noGoal");
   const [noGoalNow, setNoGoalNow] = useState(0);
-
+  async function updateData() {
+    if(selectedItem.currentNum === selectedItem.goalNum) {
+      let data = {
+        "text" : selectedItem.text,
+        "currentNum" : selectedItem.currentNum,
+        "goalNum" : selectedItem.goalNum,
+        "success" : true,
+      };
+      await mergeData(data);  
+      Alert.alert(
+        "알림" , "🎉 달성하였습니다"
+      );
+    } else if(selectedItem.currentNum > selectedItem.goalNum) {
+      setSelectedItem({
+        ...selectedItem,
+        currentNum : selectedItem.goalNum
+      });
+      return;
+    } else if(selectedItem.currentNum < 0) {
+      setSelectedItem({
+        ...selectedItem,
+        currentNum : 0
+      });
+      return;
+    } else {
+      let data = {
+        "text" : selectedItem.text,
+        "currentNum" : selectedItem.currentNum,
+        "goalNum" : selectedItem.goalNum,
+        "success" : selectedItem.success,
+      };
+      await mergeData(data);  
+    }
+  }
+  async function mergeData(data) {
+    const jsonData = JSON.stringify(data)
+    await AsyncStorage.mergeItem(String(selectedItem.key), jsonData)
+    let storageDataArray = [];
+    storageData.forEach((d) => {
+      if(d.key === selectedItem.key) {
+        d.currentNum = data.currentNum;
+        d.success = data.success;
+        storageDataArray.push(d);
+      } else {
+        storageDataArray.push(d);
+      }
+    });
+    setStorageData(storageDataArray);
+  }
+  useEffect(() => {
+    if(selectedItem !== null){
+      updateData();
+    }
+  }, [selectedItem]);
   return (
       <View style={styles.container}>
         <View style={styles.info}>
@@ -90,84 +142,20 @@ function Counter({ storageData, setStorageData, isEmptyStorage }) {
               <Text style={styles.goalText}>{selectedItem.goalNum}</Text>
             </View>
             <View>
-            <TouchableOpacity style={styles.plus} onPress={async () => {
-                if(selectedItem.currentNum === selectedItem.goalNum) {
-                  setSelectedItem({
-                    ...selectedItem,
-                    success : true
-                  })
-                  Alert.alert(
-                    "알림" , "🎉 달성하였습니다"
-                  );
-                  let data = {
-                    "text" : selectedItem.text,
-                    "currentNum" : selectedItem.currentNum,
-                    "goalNum" : selectedItem.goalNum,
-                    "success" : selectedItem.success,
-                  };
-                  let jsonData = JSON.stringify(data)
-                  await AsyncStorage.mergeItem(String(selectedItem.key), jsonData)
-                  setStorageData([
-                    storageData.map((d) => {
-                      d.key === selectedItem.key ? 
-                        {...d, success : selectedItem.success} 
-                        : 
-                        d
-                    })]
-                  );
-                } else if(selectedItem.currentNum > selectedItem.goalNum) {
-                  Alert.alert(
-                    "알림" , "해당 문장은 달성하였습니다"
-                  );
-                } else {
-                  setSelectedItem({
-                    ...selectedItem,
-                    currentNum : selectedItem.currentNum + 1
-                  })
-                  // console.log(selectedItem);
-                  // let data = {
-                  //   "text" : selectedItem.text,
-                  //   "currentNum" : selectedItem.currentNum,
-                  //   "goalNum" : selectedItem.goalNum,
-                  //   "success" : selectedItem.success,
-                  // };
-                  // console.log(data);
-                  // let jsonData = JSON.stringify(data)
-                  // await AsyncStorage.mergeItem(String(selectedItem.key), jsonData)
-                  // let getData = await AsyncStorage.getItem(String(selectedItem.key))
-                  // let getJsonData = JSON.parse(getData)
-                  // console.log(getJsonData)
-                  // handleStaorageData(data)
-                }
-              }}>
+            <TouchableOpacity style={styles.plus} onPress={() => {
+              setSelectedItem({
+                ...selectedItem,
+                currentNum : selectedItem.currentNum + 1
+              });
+            }}>
                 <Text style={styles.plusText}>+</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.minus} onPress={async() =>{
-                if(selectedItem.currentNum === 0) {
-                  return;
-                } else {
-                  setSelectedItem({
-                    ...selectedItem,
-                    currentNum : selectedItem.currentNum - 1
-                  })
-                  let data = {
-                    "text" : selectedItem.text,
-                    "currentNum" : selectedItem.currentNum,
-                    "goalNum" : selectedItem.goalNum,
-                    "success" : selectedItem.success,
-                  };
-                  let jsonData = JSON.stringify(data)
-                  await AsyncStorage.mergeItem(String(selectedItem.key), jsonData)
-                  setStorageData([
-                    storageData.map((d) => {
-                      d.key === selectedItem.key ? 
-                        {...d, currentNum : selectedItem.currentNum} 
-                        : 
-                        d
-                    })]
-                  );
-                }
-              }}>
+            <TouchableOpacity style={styles.minus} onPress={() =>{
+              setSelectedItem({
+                ...selectedItem,
+                currentNum : selectedItem.currentNum - 1
+              });
+            }}>
                 <Text style={styles.minusText}>-</Text>
             </TouchableOpacity>
             </View>
@@ -273,13 +261,6 @@ const styles = StyleSheet.create({
     fontSize: 50,
     textAlign: 'center',
   },
-  success: {
-    width: 350,
-    height: 525,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }
 });
 
 export default Counter;

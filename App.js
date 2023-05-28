@@ -27,6 +27,7 @@ STRING_STORAGE_KEY = STRING_STORAGE_KEY.replace(/-/g,'');
 export default function App() {
   const [numberStorageKey, setNumberStarageKey] = useState([]);
   const [storageData, setStorageData] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [isEmptyStorage, setIsEmptyStorage] = useState(true);
   async function getTodayKeys() {
     let keys = await AsyncStorage.getAllKeys()
@@ -80,12 +81,15 @@ export default function App() {
           setStorageData={setStorageData}
           isEmptyStorage={isEmptyStorage}
           setIsEmptyStorage={setIsEmptyStorage}
+          setSelectedItem={setSelectedItem}
           />} 
         />
         <Tab.Screen name="Counter" children={() => <Counter 
           storageData={storageData}
           setStorageData={setStorageData}
           isEmptyStorage={isEmptyStorage}
+          selectedItem={selectedItem}
+          setSelectedItem={setSelectedItem}
           />} 
         />
         <Tab.Screen name="Calendar" component={CalendarScreen} />
