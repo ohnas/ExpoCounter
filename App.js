@@ -81,6 +81,7 @@ export default function App() {
           setStorageData={setStorageData}
           isEmptyStorage={isEmptyStorage}
           setIsEmptyStorage={setIsEmptyStorage}
+          selectedItem={selectedItem}
           setSelectedItem={setSelectedItem}
           />} 
         />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Text, View, StyleSheet, TextInput, ScrollView, Button, Alert, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function SayList({ todayValue, STRING_STORAGE_KEY, numberStorageKey, setNumberStarageKey, storageData, setStorageData, isEmptyStorage, setIsEmptyStorage, setSelectedItem }) {
+function SayList({ todayValue, STRING_STORAGE_KEY, numberStorageKey, setNumberStarageKey, storageData, setStorageData, isEmptyStorage, setIsEmptyStorage, selectedItem, setSelectedItem }) {
     const [text, setText] = useState("");
     const [goalNum, setGoalNum] = useState("");
     function handleChangeText(value) {
@@ -89,7 +89,9 @@ function SayList({ todayValue, STRING_STORAGE_KEY, numberStorageKey, setNumberSt
                                 <Pressable onPress={async () => {
                                     await AsyncStorage.removeItem(String(d.key));
                                     setStorageData(storageData.filter((data) => data.key !== d.key));
-                                    setSelectedItem(null);
+                                    if(d.key === selectedItem.key) {
+                                        setSelectedItem(null);
+                                    }
                                 }}>
                                     <Text>🗑</Text>
                                 </Pressable>
