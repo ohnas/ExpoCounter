@@ -1,40 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function CalendarScreen() {
-    const [dayList, setDayList] = useState([]);
+function CalendarScreen({ successData }) {
     const [marking, setMarking] = useState({});
-    function currentMonthDayList() {
-        let result = [];
-        let day = new Date();
-        let intialDate = 0; 
-        while(intialDate !== 1) {
-            intialDate = day.getDate();
-            result.push(day.toISOString().split("T")[0]);
-            day.setDate(day.getDate() - 1);
+    function handleMarking() {
+        if(successData.length !==0) {
+            successData.forEach((data) => {
+                setMarking({
+                    ...marking,
+                    [data.key] : {marked : data.success}
+                })
+            });
         }
-        setDayList(result);
     }
-    async function getData() {
-        let markingDate = {};
-        for (let day of dayList) {
-            let value = await AsyncStorage.getItem(day)
-            if(value !== null) {
-                // let data = JSON.parse(value)
-                markingDate[day] = {marked: true}
-            }
-        }
-        setMarking(markingDate);
-    }
-    console.log(marking);
     useEffect(() => {
-        currentMonthDayList();
-    }, []);
-    useEffect(() => {
-        getData();
-    }, []);
+        handleMarking();
+    }, [successData]);
     return (
         <View style={styles.container}>
             <Calendar markedDates={marking} />

@@ -29,6 +29,7 @@ export default function App() {
   const [storageData, setStorageData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isEmptyStorage, setIsEmptyStorage] = useState(true);
+  const [successData, setSuccessData] = useState([]);
   async function getTodayKeys() {
     let keys = await AsyncStorage.getAllKeys()
     let todayKeys = [];
@@ -66,8 +67,48 @@ export default function App() {
       setStorageData(storageDataArry);
       setIsEmptyStorage(false);
   }
+  async function handleSuccessData() {
+    if(storageData.length !== 0) {
+      isSuccessArray = [];
+      storageData.forEach((data) => {
+          isSuccessArray.push(data.success);
+      });
+      if(isSuccessArray.includes(false)) {
+        return;
+      } else {
+        const data = {
+          "success" : true
+        }
+        const jsonData = JSON.stringify(data)
+        await AsyncStorage.setItem(todayValue, jsonData)
+      }
+    }
+  }
+  async function getSuccessData() {
+    let keys = await AsyncStorage.getAllKeys()
+    let successDatakeys = [];
+    keys.forEach((key) => {
+      if(key.includes("-")) {
+        successDatakeys.push(key)
+      }
+    })
+    for(let key of successDatakeys) {
+      let data = await AsyncStorage.getItem(key)
+      let jsonData = JSON.parse(data)
+      setSuccessData([...successData, {
+        "key" : key, 
+        "success" : jsonData.success,
+      }])
+    }
+  }
   useEffect(() => {
     getTodayKeys();
+  }, []);
+  useEffect(() => {
+    handleSuccessData();
+  }, [storageData]);
+  useEffect(() => {
+    getSuccessData();
   }, []);
   return (
     <NavigationContainer>
@@ -93,7 +134,10 @@ export default function App() {
           setSelectedItem={setSelectedItem}
           />} 
         />
-        <Tab.Screen name="Calendar" component={CalendarScreen} />
+        <Tab.Screen name="Calendar" children={() => <CalendarScreen 
+          successData={successData}
+          />} 
+        />
         <Tab.Screen name="Settings" component={Setting} />
       </Tab.Navigator>
       <StatusBar style="auto" />
