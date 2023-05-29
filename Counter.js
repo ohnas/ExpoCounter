@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TouchableOpacity, View, Vibration, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Audio } from 'expo-av';
 
-function Counter({ storageData, setStorageData, isEmptyStorage, selectedItem, setSelectedItem }) {
+function Counter({ storageData, setStorageData, isEmptyStorage, selectedItem, setSelectedItem, isVibrationEnabled, isSoundEnabled }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [header, setHeader] = useState("noGoal");
   const [noGoalNow, setNoGoalNow] = useState(0);
@@ -54,6 +55,10 @@ function Counter({ storageData, setStorageData, isEmptyStorage, selectedItem, se
       }
     });
     setStorageData(storageDataArray);
+  }
+  async function playSound() {
+    const { sound } = await Audio.Sound.createAsync( require('./assets/sound.mp3'));
+    await sound.playAsync();
   }
   useEffect(() => {
     if(selectedItem !== null){
@@ -121,7 +126,11 @@ function Counter({ storageData, setStorageData, isEmptyStorage, selectedItem, se
               <Text style={styles.counterText}>{noGoalNow}</Text>
             </View>
             <View>
-              <TouchableOpacity style={styles.plus} onPress={() => setNoGoalNow((previous) => previous + 1)}>
+              <TouchableOpacity style={styles.plus} onPress={() => {
+                setNoGoalNow((previous) => previous + 1)
+                isVibrationEnabled ? Vibration.vibrate() : Vibration.cancel()
+                isSoundEnabled ? playSound() : null
+              }}>
                   <Text style={styles.plusText}>+</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.minus} onPress={() => {
@@ -129,7 +138,10 @@ function Counter({ storageData, setStorageData, isEmptyStorage, selectedItem, se
                 if(noGoalNow <= 0) {
                   setNoGoalNow(0);
                   return;
-                }}}>
+                }
+                isVibrationEnabled ? Vibration.vibrate() : Vibration.cancel()
+                isSoundEnabled ? playSound() : null
+                }}>
                   <Text style={styles.minusText}>-</Text>
               </TouchableOpacity>
             </View>
@@ -147,6 +159,8 @@ function Counter({ storageData, setStorageData, isEmptyStorage, selectedItem, se
                 ...selectedItem,
                 currentNum : selectedItem.currentNum + 1
               });
+              isVibrationEnabled ? Vibration.vibrate() : Vibration.cancel()
+              isSoundEnabled ? playSound() : null
             }}>
                 <Text style={styles.plusText}>+</Text>
             </TouchableOpacity>
@@ -155,6 +169,8 @@ function Counter({ storageData, setStorageData, isEmptyStorage, selectedItem, se
                 ...selectedItem,
                 currentNum : selectedItem.currentNum - 1
               });
+              isVibrationEnabled ? Vibration.vibrate() : Vibration.cancel()
+              isSoundEnabled ? playSound() : null
             }}>
                 <Text style={styles.minusText}>-</Text>
             </TouchableOpacity>

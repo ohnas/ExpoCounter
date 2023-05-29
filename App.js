@@ -30,6 +30,8 @@ export default function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isEmptyStorage, setIsEmptyStorage] = useState(true);
   const [successData, setSuccessData] = useState([]);
+  const [isVibrationEnabled, setIsVibrationEnabled] = useState(false);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(false);
   async function getTodayKeys() {
     let keys = await AsyncStorage.getAllKeys()
     let todayKeys = [];
@@ -132,13 +134,21 @@ export default function App() {
           isEmptyStorage={isEmptyStorage}
           selectedItem={selectedItem}
           setSelectedItem={setSelectedItem}
+          isVibrationEnabled={isVibrationEnabled}
+          isSoundEnabled={isSoundEnabled}
           />} 
         />
         <Tab.Screen name="Calendar" children={() => <CalendarScreen 
           successData={successData}
           />} 
         />
-        <Tab.Screen name="Settings" component={Setting} />
+        <Tab.Screen name="Settings" children={() => <Setting 
+          isVibrationEnabled={isVibrationEnabled}
+          setIsVibrationEnabled={setIsVibrationEnabled}
+          isSoundEnabled={isSoundEnabled}
+          setIsSoundEnabled={setIsSoundEnabled}
+          />} 
+        />
       </Tab.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>
