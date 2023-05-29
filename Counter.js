@@ -116,7 +116,15 @@ function Counter({ storageData, setStorageData, isEmptyStorage, selectedItem, se
           <Pressable onPress={() => setHeader('noGoal')}>
               <Text style={{...styles.headerText, color: header === 'noGoal' ? "black" : "gray"}}>노 목표</Text>
           </Pressable>
-          <Pressable onPress={() => setHeader('goal')}>
+          <Pressable onPress={() => {
+            if(selectedItem === null) {
+              Alert.alert(
+                "알림" , "먼저 문장을 선택해주세요"
+              );
+            } else {
+              setHeader('goal')
+            }
+          }}>
               <Text style={{...styles.headerText, color: header === 'goal' ? "black" : "gray"}}>목표</Text>
           </Pressable>
         </View>
