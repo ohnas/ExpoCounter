@@ -80,11 +80,11 @@ function SayList({ todayValue, STRING_STORAGE_KEY, numberStorageKey, setNumberSt
                     <View style={styles.dataView}>
                         {storageData.map((d) =>
                             <View style={styles.dataViewInner} key={d.key}>
-                                <Text style={styles.dataViewInnerText}>{d.text}</Text>
+                                <Text style={styles.dataViewInnerText} numberOfLines={1} ellipsizeMode={'tail'}>{d.text}</Text>
                                 <View style={styles.dataViewInnerNumber}>
-                                    <Text style={styles.dataViewInnerText}>{d.currentNum}</Text>
-                                    <Text style={styles.dataViewInnerText}>/</Text>
-                                    <Text style={styles.dataViewInnerText}>{d.goalNum}</Text>
+                                    <Text style={styles.dataViewInnerNumberText}>{d.currentNum}</Text>
+                                    <Text style={styles.dataViewInnerNumberText}>/</Text>
+                                    <Text style={styles.dataViewInnerNumberText}>{d.goalNum}</Text>
                                 </View>
                                 <Pressable onPress={async () => {
                                     await AsyncStorage.removeItem(String(d.key));
@@ -148,12 +148,17 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     dataViewInnerText: {
+        width: 200,
         fontSize: 30,
         paddingVertical: 15,
+        overflow: 'hidden',
     },
     dataViewInnerNumber: {
         flexDirection: 'row',
-    }
+    },
+    dataViewInnerNumberText: {
+        fontSize: 20,
+    },
 })
 
 export default SayList;
